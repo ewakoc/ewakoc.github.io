@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calibrating Trust in AI · Ewa Koc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:      #0A0A0A;
+  --ink-soft: #1F1F1F;
+  --mid:      #6B6B6B;
+  --muted:    #9A9A9A;
+  --rule:     #EAEAEA;
+  --paper:    #FFFFFF;
+  --card:     #F5F4F0;
+  --device:   #1A1A1A;
+  --accent:   #FFE082;
+  --ease:     cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  letter-spacing: -0.005em;
+}
+::selection { background: var(--ink); color: var(--paper); }
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 24px 48px;
+  display: flex; justify-content: space-between; align-items: center;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.nav-name {
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+}
+.nav-back {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--mid);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.2s ease, transform 0.3s var(--ease);
+}
+.nav-back:hover { color: var(--ink); transform: translateX(-4px); }
+
+/* ── LAYOUT ── */
+.wrap { max-width: 1000px; margin: 0 auto; padding: 0 48px; }
+.wrap-narrow { max-width: 800px; }
+
+section { padding: 80px 0; }
+section.hero-section { padding: 140px 0 80px; }
+
+/* ── EYEBROW LABEL ── */
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mid);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 28px;
+}
+
+/* ── HERO ── */
+.hero-meta {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 32px;
+  margin-bottom: 56px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--rule);
+}
+.hero-meta-item { display: flex; flex-direction: column; gap: 6px; }
+.hero-meta-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.hero-meta-value {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+}
+
+h1.hero-title {
+  font-size: clamp(48px, 7.6vw, 112px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.0;
+  color: var(--ink);
+  max-width: 14ch;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeUp 1s var(--ease) forwards;
+  animation-delay: 0.1s;
+}
+.hero-subtitle {
+  font-size: clamp(20px, 2vw, 26px);
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--mid);
+  margin-top: 32px;
+  max-width: 50ch;
+  letter-spacing: -0.01em;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeUp 1s var(--ease) forwards;
+  animation-delay: 0.25s;
+}
+
+@keyframes fadeUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── BODY / H2 / H3 / P ── */
+h2 {
+  font-size: clamp(36px, 4.4vw, 60px);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  margin-bottom: 32px;
+  max-width: 22ch;
+}
+h3 {
+  font-size: clamp(22px, 2.4vw, 28px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin-top: 56px;
+  margin-bottom: 16px;
+  color: var(--ink);
+}
+.body-p {
+  font-size: clamp(17px, 1.4vw, 19px);
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  margin-bottom: 20px;
+  max-width: 60ch;
+  letter-spacing: -0.005em;
+}
+.body-p:last-child { margin-bottom: 0; }
+.body-p strong { font-weight: 600; color: var(--ink); }
+
+/* ── PULL QUOTE ── */
+.pull-quote {
+  padding: 48px 0;
+  margin: 32px 0;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+.pull-quote-text {
+  font-size: clamp(24px, 2.8vw, 34px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.18;
+  color: var(--ink);
+  margin-bottom: 16px;
+  max-width: 28ch;
+}
+.pull-quote-attr {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mid);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+/* ── TWO COL ── */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  margin-top: 48px;
+}
+.two-col + .two-col { margin-top: 48px; }
+.col-card {
+  padding-top: 24px;
+  border-top: 1px solid var(--ink);
+}
+.col-card-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 12px;
+  letter-spacing: -0.005em;
+}
+.col-card p {
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--mid);
+  letter-spacing: -0.005em;
+}
+
+/* ── CONFERENCE STRIP (where it ran) ── */
+.conf-strip {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  margin-top: 48px;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.conf-cell {
+  padding: 32px 24px 32px 0;
+}
+.conf-cell:first-child { padding-right: 32px; border-right: 1px solid var(--rule); }
+.conf-cell:last-child { padding-left: 32px; }
+.conf-name {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.conf-detail {
+  font-size: 14px;
+  color: var(--mid);
+  letter-spacing: -0.005em;
+}
+.conf-tag {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  letter-spacing: -0.005em;
+}
+
+/* ── VIDEO inside the device frame ── */
+.shot {
+  margin: 48px 0 16px;
+  max-width: 100%;
+  background: var(--device);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow:
+    0 30px 60px -20px rgba(10,10,10,0.25),
+    0 18px 36px -18px rgba(10,10,10,0.18);
+}
+.shot .chrome-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 12px;
+}
+.shot .chrome-row span.dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+}
+.shot .chrome-row .url {
+  margin-left: 16px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.01em;
+}
+.shot-body {
+  background: #000;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.video-wrap {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+}
+.video-wrap iframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border: 0;
+}
+.shot-caption {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--mid);
+  letter-spacing: -0.005em;
+  max-width: 70ch;
+}
+
+/* ── PERSONA BLOCK (Linda) ── */
+.persona-block {
+  margin-top: 48px;
+  padding: 32px 0;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+.persona-icon {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: #fff;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.persona-name {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.persona-role {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mid);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 14px;
+}
+.persona-body p {
+  font-size: 15px;
+  color: var(--ink-soft);
+  line-height: 1.55;
+  letter-spacing: -0.005em;
+  margin: 0;
+  max-width: 60ch;
+}
+
+/* ── SEESAW DIAGRAM (rebuilt minimal) ── */
+.seesaw-wrap {
+  margin-top: 48px;
+  background: var(--card);
+  padding: 56px 32px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.seesaw-label-row {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 480px;
+  margin-bottom: 24px;
+}
+.seesaw-side { text-align: center; width: 140px; }
+.seesaw-side-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+  margin-bottom: 4px;
+}
+.seesaw-side-sub {
+  font-size: 11px;
+  color: var(--mid);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+}
+.seesaw-beam-wrap {
+  width: 100%; max-width: 480px;
+  position: relative;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.seesaw-beam {
+  width: 100%;
+  height: 2px;
+  background: var(--ink);
+  position: relative;
+  transform: rotate(-8deg);
+  transform-origin: center;
+}
+.seesaw-pivot {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%) rotate(8deg);
+  width: 0; height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 14px solid var(--ink);
+  z-index: 2;
+}
+.seesaw-dot-left, .seesaw-dot-right {
+  position: absolute;
+  top: 50%; width: 14px; height: 14px;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  background: var(--ink);
+}
+.seesaw-dot-left { left: -7px; }
+.seesaw-dot-right { right: -7px; background: var(--accent); border: 1px solid var(--ink); }
+.seesaw-caption {
+  margin-top: 28px;
+  font-size: 13px;
+  color: var(--mid);
+  text-align: center;
+  max-width: 50ch;
+  letter-spacing: -0.005em;
+}
+
+/* ── TRUST SPECTRUM ── */
+.spectrum-wrap {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid var(--ink);
+}
+.spectrum-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mid);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 24px;
+}
+.spectrum-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to right, #d96049, #e8c84a, #5cb87a);
+  margin-bottom: 12px;
+  position: relative;
+}
+.spectrum-marker {
+  position: absolute;
+  top: -4px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1.5px var(--ink);
+  transform: translateX(-50%);
+}
+.spectrum-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+  margin-top: 10px;
+  margin-bottom: 36px;
+}
+.spectrum-zones {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+  border-top: 1px solid var(--rule);
+}
+.zone {
+  padding: 24px 20px 24px 0;
+  border-right: 1px solid var(--rule);
+}
+.zone:not(:first-child) { padding-left: 20px; }
+.zone:last-child { border-right: none; padding-right: 0; }
+.zone-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.zone-desc {
+  font-size: 14px;
+  color: var(--mid);
+  line-height: 1.55;
+  letter-spacing: -0.005em;
+}
+
+/* ── COMPACT FEATURES (pillars / framework) ── */
+.compact-features {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+  margin-top: 48px;
+  border-top: 1px solid var(--rule);
+}
+.cf-item {
+  padding: 32px 24px 32px 0;
+  border-right: 1px solid var(--rule);
+}
+.cf-item:last-child { border-right: none; padding-right: 0; }
+.cf-item:not(:first-child) { padding-left: 32px; }
+.cf-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.cf-num {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.cf-name {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  margin-bottom: 10px;
+  color: var(--ink);
+}
+.cf-desc {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--mid);
+  letter-spacing: -0.005em;
+}
+
+/* ── STATS STRIP ── */
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  margin-top: 48px;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+.stat-cell {
+  padding: 48px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-right: 1px solid var(--rule);
+  padding-left: 32px;
+}
+.stat-cell:first-child { padding-left: 0; }
+.stat-cell:last-child { border-right: none; }
+.stat-num {
+  font-size: clamp(56px, 7vw, 96px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  color: var(--ink);
+}
+.stat-label {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--mid);
+  letter-spacing: -0.005em;
+  max-width: 28ch;
+}
+
+/* ── NEXT PROJECT ── */
+.next-project {
+  padding: 80px 0 100px;
+  border-top: 1px solid var(--rule);
+}
+.next-project-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 14px;
+}
+.next-project-link {
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--ink);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: gap 0.3s var(--ease), color 0.2s ease;
+}
+.next-project-link:hover { color: var(--mid); gap: 16px; }
+.next-project-arrow {
+  font-size: 16px;
+  font-weight: 400;
+  transition: transform 0.3s var(--ease);
+}
+.next-project-link:hover .next-project-arrow { transform: translateX(4px); }
+
+footer {
+  border-top: 1px solid var(--rule);
+  padding: 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  max-width: 1000px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+.footer-name { font-size: 15px; font-weight: 600; }
+.footer-meta { font-size: 13px; color: var(--mid); font-weight: 500; }
+
+/* ── REVEAL ── */
+.reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.9s var(--ease), transform 0.9s var(--ease); }
+.reveal.in { opacity: 1; transform: translateY(0); }
+
+@media (max-width: 900px) {
+  nav { padding: 18px 24px; }
+  .wrap, .wrap-narrow { padding: 0 24px; }
+  section { padding: 60px 0; }
+  section.hero-section { padding: 100px 0 60px; }
+  .hero-meta { grid-template-columns: 1fr 1fr; gap: 24px; }
+  .stats-strip { grid-template-columns: 1fr; }
+  .stat-cell { padding: 32px 0; border-right: none; border-bottom: 1px solid var(--rule); padding-left: 0; }
+  .stat-cell:last-child { border-bottom: none; }
+  .two-col { grid-template-columns: 1fr; gap: 24px; }
+  .conf-strip { grid-template-columns: 1fr; }
+  .conf-cell, .conf-cell:first-child, .conf-cell:last-child {
+    padding: 24px 0;
+    border-right: none;
+    border-bottom: 1px solid var(--rule);
+  }
+  .conf-cell:last-child { border-bottom: none; }
+  .persona-block { flex-direction: column; }
+  .compact-features { grid-template-columns: 1fr; }
+  .cf-item, .cf-item:not(:first-child) {
+    padding: 28px 0;
+    border-right: none;
+    border-bottom: 1px solid var(--rule);
+  }
+  .cf-item:last-child { border-bottom: none; }
+  .spectrum-zones { grid-template-columns: 1fr; }
+  .zone, .zone:not(:first-child) {
+    padding: 20px 0;
+    border-right: none;
+    border-bottom: 1px solid var(--rule);
+  }
+  .zone:last-child { border-bottom: none; }
+  .shot { margin-left: -8px; margin-right: -8px; }
+  footer { padding: 36px 24px; }
+}
+</style>
+</head>
+<body>
+<nav>
+  <a class="nav-back" href="index.html">← Back to work</a>
+  <a class="nav-name" href="index.html">Ewa Koc</a>
+</nav>
+
+<!-- ═══════════ HERO ═══════════ -->
+<section class="hero-section">
+  <div class="wrap">
+    <div class="hero-meta">
+      <div class="hero-meta-item">
+        <span class="hero-meta-label">Format</span>
+        <span class="hero-meta-value">Conference talk + article</span>
+      </div>
+      <div class="hero-meta-item">
+        <span class="hero-meta-label">With</span>
+        <span class="hero-meta-value">Manú Bartlett, UX Researcher</span>
+      </div>
+      <div class="hero-meta-item">
+        <span class="hero-meta-label">Year</span>
+        <span class="hero-meta-value">2024</span>
+      </div>
+      <div class="hero-meta-item">
+        <span class="hero-meta-label">Venues</span>
+        <span class="hero-meta-value">UX Brighton · UX Nordic</span>
+      </div>
+    </div>
+
+    <h1 class="hero-title">Calibrating trust in AI.</h1>
+    <p class="hero-subtitle">A talk I gave at UX Brighton in 2024. Started from a real problem at work and tried to say something useful about it.</p>
+    <a href="#the-talk" style="display:inline-flex; align-items:center; gap:8px; margin-top:32px; font-size:13px; font-weight:500; color:var(--mid); text-decoration:none; letter-spacing:-0.005em; transition:color 0.2s ease;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--mid)'">Watch the talk <span style="font-size:11px;">↓</span></a>
+  </div>
+</section>
+
+<!-- ═══════════ THE TALK / VIDEO ═══════════ -->
+<section id="the-talk">
+  <div class="wrap">
+    <div class="wrap-narrow" style="padding: 0;">
+      <div class="label reveal">The talk</div>
+      <h2 class="reveal">Where it came from.</h2>
+      <p class="body-p reveal">In 2024 I spoke at UX Brighton in the UK to share my experience of designing a trustworthy new AI search for Derwent Innovation, our flagship patent search product. The talk focused on how to build user trust within a sceptical user base of patent analysts — and why that problem is harder than it sounds. I also gave a version of the talk at UX Nordic in Copenhagen later that year.</p>
+
+      <div class="conf-strip reveal">
+        <div class="conf-cell">
+          <div class="conf-name">UX Brighton</div>
+          <div class="conf-detail">Brighton, UK · 2024</div>
+          <span class="conf-tag">Original talk</span>
+        </div>
+        <div class="conf-cell">
+          <div class="conf-name">UX Nordic</div>
+          <div class="conf-detail">Copenhagen · 2024</div>
+          <span class="conf-tag">Revised version</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="shot reveal">
+      <div class="chrome-row">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="url">youtube.com · UX Brighton 2024</span>
+      </div>
+      <div class="shot-body">
+        <div class="video-wrap">
+          <iframe
+            src="https://www.youtube.com/embed/Qr7Jh4SUDJQ"
+            title="Calibrating User Trust in AI Products, UX Brighton 2024"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+    <div class="wrap-narrow" style="padding: 0;">
+      <p class="shot-caption reveal">Full talk · 28 minutes · UX Brighton, 2024.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ THE CHALLENGE / LINDA ═══════════ -->
+<section>
+  <div class="wrap">
+    <div class="wrap-narrow" style="padding: 0;">
+      <div class="label reveal">The challenge</div>
+      <h2 class="reveal">Our users, and why trust was a real problem.</h2>
+      <p class="body-p reveal">To understand the problems faced by our users, we introduced Linda, a dedicated patent analyst. Linda is deep in her routine and comfortable with the familiar tools in her field. She spends hours going through patent data, often wishing for a quicker way to complete her tasks. One day she hears about an upgrade to Derwent Innovation, now with an AI-powered search. But to Linda, this AI is a mysterious technology she does not quite trust. The challenge: how do we convince Linda that giving Derwent's AI search a chance is worth it?</p>
+
+      <div class="persona-block reveal">
+        <div class="persona-icon">L</div>
+        <div class="persona-body">
+          <div class="persona-name">Linda, patent analyst</div>
+          <div class="persona-role">UK · 50+ · 30 yrs experience · high legal accountability</div>
+          <p>Spends hours in patent data every day. Has a workflow that works. Now hearing that Derwent Innovation has an AI-powered search, and wondering whether she should trust it, and if so, how much.</p>
+        </div>
+      </div>
+
+      <p class="body-p reveal" style="margin-top: 40px;">Before jumping into solutions, we needed to understand what trust actually is. Trust is something that is safe and reliable. Trust in a product leads to its adoption, and once a tool is trusted and adopted it also reduces the likelihood of customers leaving for competitors. This leads to satisfied and loyal users who are more likely to promote the product by word of mouth.</p>
+
+      <p class="body-p reveal">According to the Edelman Trust Barometer, 58% of people trust AI. Among Gen Z that number rises to 67%. Among baby boomers it drops to 29%. Trust levels also vary significantly by geography. And in our case, Linda is from the UK, she is 50+, and most of our users are veterans who have worked in this field for more than 30 years. Research by Parasuraman and Riley explains that the human-AI relationship depends a lot on the user's confidence in their own knowledge of the area. If you are an expert in a topic, you may actually be more sceptical about an AI's decisions than someone who knows nothing about it.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ THE CORE IDEA / SEESAW + SPECTRUM ═══════════ -->
+<section style="background: var(--card);">
+  <div class="wrap">
+    <div class="wrap-narrow" style="padding: 0;">
+      <div class="label reveal">The core idea</div>
+      <h2 class="reveal">Calibrated trust, not maximised trust.</h2>
+      <p class="body-p reveal">We think you should aim for trust calibration rather than trust maximisation. Calibrated trust is achieved when the user's trust in an AI system corresponds accurately to the real capabilities of the system and the risks involved. In environments where precise and risky decision-making is crucial, like patent search, it is essential that users learn to trust AI appropriately, aligned with its actual capabilities.</p>
+      <p class="body-p reveal">The calibration between risk and user trust is like a seesaw. When one goes down, the other goes up. Risk plays a crucial role in determining how much we trust an AI for one purpose versus another. Understanding the legal, financial, emotional, medical or moral risks taken by your specific user groups is therefore crucial in designing AI products that build honest trust calibration with users.</p>
+
+      <div class="seesaw-wrap reveal" style="background: var(--paper);">
+        <div class="seesaw-label-row">
+          <div class="seesaw-side">
+            <div class="seesaw-side-title">Risk</div>
+            <div class="seesaw-side-sub">Legal · financial · professional</div>
+          </div>
+          <div class="seesaw-side">
+            <div class="seesaw-side-title">Trust</div>
+            <div class="seesaw-side-sub">User confidence in AI output</div>
+          </div>
+        </div>
+        <div class="seesaw-beam-wrap">
+          <div class="seesaw-beam">
+            <div class="seesaw-pivot"></div>
+            <div class="seesaw-dot-left"></div>
+            <div class="seesaw-dot-right"></div>
+          </div>
+        </div>
+        <p class="seesaw-caption">When risk goes up, calibrated trust should come down, and vice versa. The balance point is different for every domain.</p>
+      </div>
+
+      <div class="spectrum-wrap reveal">
+        <div class="spectrum-title">The trust spectrum</div>
+        <div class="spectrum-bar">
+          <div class="spectrum-marker" style="left: 18%;"></div>
+          <div class="spectrum-marker" style="left: 50%;"></div>
+          <div class="spectrum-marker" style="left: 82%;"></div>
+        </div>
+        <div class="spectrum-labels">
+          <span>Under-trust</span>
+          <span>Calibrated</span>
+          <span>Over-trust</span>
+        </div>
+        <div class="spectrum-zones">
+          <div class="zone">
+            <div class="zone-label">Under-trust</div>
+            <div class="zone-desc">User ignores AI. Feature goes unused. Product fails to deliver value.</div>
+          </div>
+          <div class="zone">
+            <div class="zone-label">Calibrated</div>
+            <div class="zone-desc">User uses AI to go faster, applies their own judgement to the outputs. Sustainable.</div>
+          </div>
+          <div class="zone">
+            <div class="zone-label">Over-trust</div>
+            <div class="zone-desc">User accepts AI without scrutiny. Errors go uncaught. Risk increases.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ THE FRAMEWORK / THREE PILLARS ═══════════ -->
+<section>
+  <div class="wrap">
+    <div class="wrap-narrow" style="padding: 0;">
+      <div class="label reveal">The framework</div>
+      <h2 class="reveal">What we found actually works.</h2>
+
+      <div class="compact-features reveal">
+        <div class="cf-item">
+          <div class="cf-meta">
+            <span class="cf-num">01</span>
+          </div>
+          <div class="cf-name">Explain why, not how</div>
+          <p class="cf-desc">Users are more interested in why an AI makes a decision than how. For Derwent's AI search we designed a relevance fragment — a phrase from each result showing why it appeared. Users could assess relevance themselves and explain results to their team. They retained control.</p>
+        </div>
+        <div class="cf-item">
+          <div class="cf-meta">
+            <span class="cf-num">02</span>
+          </div>
+          <div class="cf-name">Make it human-friendly</div>
+          <p class="cf-desc">Humans should be the guides of AI. Human-in-the-Loop means allowing users to give feedback when predictions fall below a confidence threshold. Users who can correct the AI start to understand what it's good at and where it falls short.</p>
+        </div>
+        <div class="cf-item">
+          <div class="cf-meta">
+            <span class="cf-num">03</span>
+          </div>
+          <div class="cf-name">Teach users how to use it</div>
+          <p class="cf-desc">Once tested, introduce the product with clear, interactive onboarding. Users learn faster when they see a response straight away. When the AI gets something wrong, an honest error message does more for long-term trust than a silent failure.</p>
+        </div>
+      </div>
+
+      <div class="pull-quote reveal" style="margin-top: 64px;">
+        <p class="pull-quote-text">"If there is too much uncertainty, being transparent can negatively impact trust levels."</p>
+        <p class="pull-quote-attr">Stowers, 2017 · Any explanation is not better than no explanation</p>
+      </div>
+
+      <p class="body-p reveal">This is something we had to sit with. In our AI search we did not want to show how results are selected, but we could show why. Giving users confusing technical explanations can put them off the tool entirely. The goal is just enough transparency to let them make a good decision.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ WHAT WE LEARNED ═══════════ -->
+<section>
+  <div class="wrap">
+    <div class="wrap-narrow" style="padding: 0;">
+      <div class="label reveal">What we learned</div>
+      <h2 class="reveal">What we ended up with.</h2>
+      <p class="body-p reveal">Linda, with her deep expertise in patent analysis, continues to rely on her extensive knowledge as her primary tool. But she now sees the AI-powered search in Derwent Innovation as a reliable assistant that has allowed her to speed up her searches without compromising the quality of her work, gradually building trust in the AI as a valuable helper. Instead of total trust maximisation, we achieved something much more sustainable: calibrated trust.</p>
+
+      <div class="two-col reveal">
+        <div class="col-card">
+          <p class="col-card-label">Know your user's risk profile</p>
+          <p>Legal accountability, professional reputation, financial consequences. The risk profile of your user group directly affects how you should calibrate trust. Patent analysts carry a lot of responsibility, and that shaped every design decision we made.</p>
+        </div>
+        <div class="col-card">
+          <p class="col-card-label">Demographics matter, but not entirely</p>
+          <p>Age, geography, and expertise level all affect starting trust levels. But good design can move the dial. Linda ended up using the AI search as a regular part of her workflow — not because she stopped being sceptical, but because the product earned it gradually.</p>
+        </div>
+      </div>
+
+      <div class="two-col reveal">
+        <div class="col-card">
+          <p class="col-card-label">UX sits in the middle</p>
+          <p>Building user trust in AI often falls to UX practitioners who bridge users and the product team — data science and engineering included. A lot of us are not given training in the limits and capabilities of AI products, which makes research and design harder. Knowledge-sharing across disciplines goes a long way.</p>
+        </div>
+        <div class="col-card">
+          <p class="col-card-label">The goal is not adoption</p>
+          <p>High adoption of a misunderstood AI feature is not a success. What we aimed for was users who trust the tool appropriately, use it sustainably, and make better decisions because of it. That is a very different target.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-strip reveal">
+      <div class="stat-cell">
+        <div class="stat-num">2</div>
+        <div class="stat-label">European UX conferences in 2024.</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-num">58%</div>
+        <div class="stat-label">of people trust AI overall. Among baby boomers it drops to 29% (Edelman).</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-num">30+</div>
+        <div class="stat-label">years experience, typical Derwent user. Not an easy crowd to design for.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ REFLECTION ═══════════ -->
+<section>
+  <div class="wrap">
+    <div class="wrap-narrow" style="padding: 0;">
+      <div class="label reveal">Our role</div>
+      <h2 class="reveal">What UX designers should own in this conversation.</h2>
+      <p class="body-p reveal">Over the last 20 years UX as a profession has developed enormously, and now AI is presenting one of the biggest challenges to our industry. The role of building user trust in AI products often falls to UX practitioners who bridge the gap between the people using the product and the product team. However, a lot of us are not given training in the limits and capabilities of AI products, which makes research and design harder.</p>
+      <p class="body-p reveal">Based on our experience, knowledge-sharing between data science, developers, product and UX teams can go a long way in building transversal understanding of AI and therefore better products. Providing training on AI for UX teams is crucial. Be curious. AI is a fascinating topic and it is our future.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ NEXT PROJECT ═══════════ -->
+<section class="next-project">
+  <div class="wrap">
+    <div class="next-project-label reveal">Next project</div>
+    <a class="next-project-link reveal" href="project_phs.html">
+      <span>Product Health Score</span>
+      <span class="next-project-arrow">→</span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-name">Ewa Koc · Senior UX Designer</div>
+  <div class="footer-meta">ewa.koc.1989@gmail.com</div>
+</footer>
+
+<script>
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('in');
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
